@@ -1,0 +1,8 @@
+{
+  "appId": "com.f1journalnews.chat",
+  "appName": "F1 Journal Chat",
+  "webDir": "www",
+  "android": { "allowMixedContent": true },
+  "server": { "androidScheme": "http", "cleartext": true },
+  "plugins": { "CapacitorHttp": { "enabled": true } }
+}

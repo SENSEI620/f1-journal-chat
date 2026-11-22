@@ -1,0 +1,43 @@
+# Copie este arquivo para  .github/workflows/apk.yml  no repositório. A cada push (ou clicando em "Run workflow") ele gera o APK.
+# O APK aparece em: GitHub > Actions > (a execução) > Artifacts > f1-journal-chat-apk
+name: Gerar APK
+on:
+  push:
+    paths: ['celular/**', 'chat-app/public/**', 'chat-app/icone.png']
+  workflow_dispatch:
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - name: Montar o app
+        working-directory: celular
+        env:
+          # Aviso com o app fechado: só liga se você criou o segredo GOOGLE_SERVICES_JSON (veja COMO-LIGAR-AVISO-NO-CELULAR.md)
+          FIREBASE_LIGADO: ${{ secrets.GOOGLE_SERVICES_JSON != '' && '1' || '0' }}
+        run: |
+          npm install
+          node preparar.js
+          [ -d android ] || npx cap add android
+          npx cap sync android
+      - name: Firebase e ajustes do Android
+        working-directory: celular
+        env:
+          GS: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          sh extra/android-ajustes.sh
+          if [ -n "$GS" ]; then printf '%s' "$GS" > android/app/google-services.json; echo "Firebase LIGADO neste APK"; else echo "Sem GOOGLE_SERVICES_JSON: este APK só avisa com o app aberto"; fi
+      - name: Ícone do app (celular/assets/)
+        working-directory: celular
+        run: npx --yes @capacitor/assets@3 generate --android --iconBackgroundColor '#001640' --iconBackgroundColorDark '#001640'
+      - name: Gerar APK
+        working-directory: celular/android
+        run: ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: f1-journal-chat-apk
+          path: celular/android/app/build/outputs/apk/debug/app-debug.apk

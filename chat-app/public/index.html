@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: http: https:; style-src 'self'; script-src 'self'; media-src 'self' data:">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F1 Journal Chat</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<div id="barraTitulo">
+  <img id="logoApp" class="logo-app" alt=""><h1>F1 Journal Chat</h1>
+  <span id="status" class="status" title="Conexão com o servidor"><i></i><b>Conectando…</b></span>
+  <div id="janelaBtns" aria-label="Controles da janela">
+    <button id="jMin" class="luz amarela" title="Minimizar"></button>
+    <button id="jMax" class="luz verde" title="Maximizar / restaurar"></button>
+    <button id="jFechar" class="luz vermelha" title="Fechar"></button>
+  </div>
+</div>
+<div id="app">
+  <aside id="lado">
+    <div class="busca">
+      <button class="icone" id="btnMenuLado" title="Menu"><i data-ic="menu"></i></button>
+      <input id="busca" placeholder="Buscar bot ou palavra…" autocomplete="off">
+      <button class="icone so-pc" id="btnCompactar" title="Minimizar a lista (só os ícones)"><i data-ic="panel-left-close"></i></button>
+    </div>
+    <div id="alerta" hidden></div>
+    <ul id="lista"></ul>
+  </aside>
+
+  <main id="principal">
+    <div id="vazio">
+      <div class="vazio-icone"><i data-ic="message-circle" data-tam="56"></i></div>
+      <h2>Escolha um bot</h2>
+      <p>Clique em um bot na lista para ver a conversa.<br>Para criar um bot novo, abra o menu (as três linhas) ao lado da busca.</p>
+    </div>
+
+    <section id="conversa" hidden>
+      <header class="conv-topo"><button class="icone" id="voltarPc" title="Voltar para a lista"><i data-ic="arrow-left"></i></button>
+        <div id="convAvatar" class="avatar"></div>
+        <div class="conv-nome"><h2 id="convNome"></h2><span id="convSub"></span></div>
+        <button id="btnBaixarTodas" class="baixar-todas so-pc" title="Baixa as imagens de todos os posts deste bot para a pasta Downloads\F1 Journal Chat"><i data-ic="download"></i><span>Baixar todas as imagens</span></button>
+        <button class="icone" id="btnBuscaConv" title="Buscar nesta conversa (Ctrl+F)"><i data-ic="search"></i></button>
+        <button class="icone" id="btnPainel" title="Perfil do bot"><i data-ic="panel-right"></i></button>
+        <div class="menu-wrap">
+          <button class="icone" id="btnMenu" title="Mais opções"><i data-ic="ellipsis-vertical"></i></button>
+          <div id="menuConv" class="menu" hidden>
+            <button id="mnSilenciar"><i data-ic="bell-off"></i><span class="rot">Silenciar notificações</span></button>
+            <button id="mnPerfil"><i data-ic="user"></i><span class="rot">Ver perfil</span></button>
+            <button id="mnGerenciar"><i data-ic="settings"></i><span class="rot">Gerenciar bot (key, comandos, sons…)</span></button>
+            <button id="mnExportar" class="so-pc"><i data-ic="file-down"></i><span class="rot">Exportar histórico do chat</span></button>
+            <button id="mnLimpar"><i data-ic="eraser"></i><span class="rot">Limpar histórico</span></button>
+            <button id="mnApagar" class="perigo"><i data-ic="trash-2"></i><span class="rot">Apagar bot</span></button>
+          </div>
+        </div>
+      </header>
+      <div class="conv-corpo"><div class="conv-col">
+      <div id="buscaConv" hidden><input id="buscaConvInput" placeholder="Buscar nesta conversa…" autocomplete="off"><small id="buscaConvQtd"></small><button class="icone" id="buscaAnt" title="Anterior (Enter)"><i data-ic="chevron-up"></i></button><button class="icone" id="buscaProx" title="Próxima (Shift+Enter)"><i data-ic="chevron-down"></i></button><button class="icone" id="buscaConvFechar" title="Fechar busca"><i data-ic="x"></i></button></div>
+      <div id="msgs">
+        <button id="maisAntigas" class="link" hidden>Carregar mensagens anteriores</button>
+        <div id="msgsLista"></div>
+      </div>
+      <div id="comandos" hidden></div>
+      <div id="previaFoto" hidden>
+        <img id="previaImg" alt="">
+        <div><b id="previaNome"></b><small>Escreva uma legenda (opcional) e aperte Enter</small></div>
+        <button class="icone" id="previaFechar" title="Cancelar foto"><i data-ic="x"></i></button>
+      </div>
+      <footer class="compor" id="rodapeCompor">
+        <button class="icone" id="btnAnexo" title="Enviar foto (ou cole com Ctrl+V)"><i data-ic="paperclip"></i></button>
+        <button class="icone" id="btnComandos" title="Comandos do bot"><i data-ic="square-slash"></i></button>
+        <button class="icone" id="btnRapidas" title="Mensagens rápidas"><i data-ic="zap"></i></button>
+        <textarea id="texto" rows="1" placeholder="Digite uma mensagem"></textarea>
+        <button class="enviar" id="btnEnviar" title="Enviar"><i data-ic="send"></i></button>
+      </footer>
+      </div>
+      <aside id="painelBot" hidden></aside></div>
+    </section>
+  </main>
+</div>
+
+<div id="drawer" hidden>
+  <div class="drawer-fundo" id="drawerFundo"></div>
+  <nav class="drawer-caixa">
+    <div class="drawer-topo"><img id="drawerLogo" class="logo-app grande" alt=""><b>F1 Journal Chat</b></div>
+    <button id="drNovo"><i data-ic="plus"></i><span class="rot">Novo bot</span></button>
+    <button id="btnNotif" class="so-pc"><i data-ic="bell"></i><span class="rot">Notificações</span></button>
+    <button id="btnLixeira"><i data-ic="trash-2"></i><span class="rot">Lixeira</span></button>
+    <button id="btnSaude" hidden><i data-ic="activity"></i><span class="rot">Saúde do servidor</span></button>
+    <button id="btnConfig"><i data-ic="settings"></i><span class="rot">Configurações</span></button>
+    <button id="btnTema"><i data-ic="moon"></i><span class="rot">Tema: escuro</span></button>
+      <small id="drawerVersao" class="drawer-versao"></small>
+  </nav>
+</div>
+<div id="modal" hidden><div class="modal-caixa" role="dialog"><header><h3 id="modalTitulo"></h3><button class="icone" id="modalFechar"><i data-ic="x"></i></button></header><div id="modalCorpo"></div></div></div>
+<div id="lightbox" hidden>
+  <div class="lb-barra"><span id="lbTitulo"></span><span><button id="lbCopiar"><i data-ic="link"></i><span class="rot">Copiar link</span></button><button id="lbBaixar"><i data-ic="download"></i><span class="rot">Baixar</span></button><button id="lbFechar" title="Fechar"><i data-ic="x"></i></button></span></div>
+  <img id="lbImg" alt="">
+</div>
+<div id="toasts"></div>
+<script src="icones.js"></script>
+<script src="historico.js"></script>
+<script src="sons.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

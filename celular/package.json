@@ -1,0 +1,17 @@
+{
+  "name": "f1-journal-chat-celular",
+  "version": "0.4.1",
+  "private": true,
+  "author": "SENSE1_BAT (Heljaco Junior) — Sense1_group",
+  "description": "F1 Journal Chat para Android (Capacitor). A tela é a mesma do computador (../chat-app/public).",
+  "scripts": {
+    "preparar": "node preparar.js",
+    "testar": "node testes/testar-celular.js"
+  },
+  "dependencies": {
+    "@capacitor/android": "6.2.0",
+    "@capacitor/cli": "6.2.0",
+    "@capacitor/core": "6.2.0",
+    "@capacitor/push-notifications": "6.0.3"
+  }
+}

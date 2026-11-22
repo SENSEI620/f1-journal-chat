@@ -1,0 +1,20 @@
+/* celular.css — só vale no app de celular. Uma tela por vez: lista de bots OU conversa (como o Telegram). */
+html, body { height: 100%; overscroll-behavior: none; }
+#janelaBtns { display: none !important; }
+#barraTitulo { padding-top: env(safe-area-inset-top); height: calc(42px + env(safe-area-inset-top)); }
+.conv-topo { -webkit-app-region: no-drag; }
+#principal::before { display: none; }
+.conv-topo { padding-right: 14px; padding-top: calc(10px + env(safe-area-inset-top)); }
+#voltar { display: none; }
+@media (max-width: 860px) {
+  #app { grid-template-columns: 1fr; position: relative; }
+  #lado, #principal { grid-column: 1; grid-row: 1; height: 100%; }
+  #principal { display: none; }
+  body.mostra-conversa #lado { display: none; }
+  body.mostra-conversa #principal { display: flex; }
+  #voltar { display: grid; }
+  .baixar-todas span { display: none; }              /* só o ícone */
+  #painelBot { position: absolute; inset: 0; width: auto; z-index: 20; }
+  .composer, .conv-col { padding-bottom: env(safe-area-inset-bottom); }
+}
+.so-pc { display: none !important; }
