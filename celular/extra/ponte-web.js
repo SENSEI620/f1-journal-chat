@@ -10,6 +10,30 @@
   const normalizar = (u) => { u = String(u || '').trim(); if (!u) return ''; if (!/^https?:\/\//i.test(u)) u = 'http://' + u; return u.replace(/\/+$/, ''); };
   const id = encodeURIComponent;
 
+  // Foto de perfil vem do SERVIDOR (igual no PC e no celular). A lista só traz a "versão" (avatar_em): a foto só é baixada quando ela muda.
+  // 'f1chat.avatares' = fotos ANTIGAS escolhidas só neste celular (sobem para o servidor na primeira vez); 'f1chat.avatarCache' = cópia do que está no servidor.
+  async function comFotos(lista) {
+    const cache = lerLS('f1chat.avatarCache', {}), legado = lerLS('f1chat.avatares', {});
+    let mudouCache = false, mudouLegado = false; const saida = [];
+    for (const b of lista) {
+      let foto = '';
+      try {
+        if (b.avatar_em) {
+          const c = cache[b.chave];
+          if (!c || c.em !== b.avatar_em) { const r = await servidor(`/studio/bots/${id(b.id)}/avatar`); cache[b.chave] = { em: r.avatar_em, dataUrl: r.avatar }; mudouCache = true; }
+          foto = cache[b.chave].dataUrl;
+        } else if (legado[b.chave]) { // foto antiga só deste celular: sobe para o servidor (uma vez)
+          try { const r = await servidor(`/studio/bots/${id(b.id)}/avatar`, { metodo: 'PUT', corpo: { dataUrl: legado[b.chave] }, tempoMs: 30000 }); cache[b.chave] = { em: r.avatar_em, dataUrl: r.avatar }; delete legado[b.chave]; mudouCache = mudouLegado = true; foto = r.avatar; }
+          catch (e) { foto = legado[b.chave]; } // sem permissão ou servidor antigo: continua mostrando a foto daqui
+        } else if (cache[b.chave]) { delete cache[b.chave]; mudouCache = true; } // foto tirada no servidor
+      } catch (e) { foto = (cache[b.chave] && cache[b.chave].dataUrl) || legado[b.chave] || ''; }
+      saida.push({ ...b, avatar: foto });
+    }
+    if (mudouCache) gravarLS('f1chat.avatarCache', cache);
+    if (mudouLegado) gravarLS('f1chat.avatares', legado);
+    return saida;
+  }
+
   function traduzirErro(msg, status) {
     msg = String(msg || '');
     if (status === 401) return msg && /sessão|usuário ou senha/i.test(msg) ? msg : 'Código de acesso incorreto (401). Confira em Configurações.';
@@ -64,17 +88,25 @@
       catch (e) { return { ok: false, erro: e.message }; }
     },
     bots: async () => { // como o motor do PC: sem servidor não dá erro, devolve {erro, bots: []} e a tela mostra o aviso + histórico
-      const av = lerLS('f1chat.avatares', {}); try { const r = await servidor('/studio/bots'); return { bots: r.bots.map((b) => ({ ...b, avatar: av[b.chave] || '' })) }; } catch (e) { return { erro: e.message, bots: [] }; } },
+      let r; try { r = await servidor('/studio/bots'); } catch (e) { return { erro: e.message, bots: [] }; }
+      return { bots: await comFotos(r.bots) }; },
     'bot-criar': async (d) => {
       const nome = String(d.nome || '').trim(); if (!nome) throw new Error('Digite o nome do bot.');
       let chave = String(d.chave || '').trim(); if (chave && !/^bot_[0-9a-f]{32}$/.test(chave)) throw new Error('Key inválida. Ela começa com "bot_" e tem 32 letras/números (a–f, 0–9).');
       if (!chave) chave = 'bot_' + Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
       return { bot: (await servidor('/studio/bots', { metodo: 'POST', corpo: { nome, chave } })).bot };
     },
-    'bot-editar': (d) => servidor(`/studio/bots/${id(d.id)}`, { metodo: 'PATCH', corpo: { nome: d.nome, ligado: d.ligado } }),
+    'bot-editar': (d) => servidor(`/studio/bots/${id(d.id)}`, { metodo: 'PATCH', corpo: { nome: d.nome, ligado: d.ligado, so_recebe: d.soRecebe } }),
     'bot-apagar': (d) => servidor(`/studio/bots/${id(d.id)}`, { metodo: 'DELETE' }),
     'bot-nova-chave': (d) => servidor(`/studio/bots/${id(d.id)}/nova-chave`, { metodo: 'POST' }),
-    'bot-avatar': (d) => { const av = lerLS('f1chat.avatares', {}); if (d.dataUrl) av[d.chave] = d.dataUrl; else delete av[d.chave]; gravarLS('f1chat.avatares', av); return { ok: true }; },
+    'bot-avatar': async (d) => { // a foto fica no servidor (só o administrador troca) e aparece igual no PC
+      if (d.dataUrl && d.dataUrl.length * 0.75 > 300 * 1024) throw new Error('Foto de perfil grande demais (máximo 300 KB).');
+      const bot = (await servidor('/studio/bots')).bots.find((x) => x.chave === d.chave); if (!bot) throw new Error('Bot não encontrado no servidor.');
+      const r = await servidor(`/studio/bots/${id(bot.id)}/avatar`, { metodo: 'PUT', corpo: { dataUrl: d.dataUrl || '' }, tempoMs: 30000 });
+      const cache = lerLS('f1chat.avatarCache', {}); if (r.avatar) cache[d.chave] = { em: r.avatar_em, dataUrl: r.avatar }; else delete cache[d.chave]; gravarLS('f1chat.avatarCache', cache);
+      const leg = lerLS('f1chat.avatares', {}); if (leg[d.chave]) { delete leg[d.chave]; gravarLS('f1chat.avatares', leg); }
+      return { ok: true };
+    },
     comandos: (d) => servidor(`/studio/bots/${id(d.botId)}/comandos`),
     'comando-criar': (d) => servidor(`/studio/bots/${id(d.botId)}/comandos`, { metodo: 'POST', corpo: { comando: d.comando, descricao: d.descricao } }),
     'comando-apagar': (d) => servidor(`/studio/comandos/${id(d.id)}`, { metodo: 'DELETE' }),
@@ -99,7 +131,7 @@
         const l = new FileReader(); l.onload = () => ok({ nome: f.name, dataUrl: l.result, bytes: f.size }); l.onerror = () => erro(new Error('Não consegui ler a foto.')); l.readAsDataURL(f); };
       i.click();
     }),
-    info: () => ({ versao: 'celular 0.1', electron: '-', sistema: 'Android (Capacitor)' }),
+    info: () => ({ versao: 'celular 0.5.0', electron: '-', sistema: 'Android (Capacitor)' }),
     'janela-acao': () => ({}),
     'baixar-posts': NAO('Baixar todas as imagens só funciona no computador por enquanto.'),
     'exportar-historico': NAO('Exportar histórico só funciona no computador por enquanto.'),

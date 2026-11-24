@@ -1,11 +1,50 @@
-/* celular.css — só vale no app de celular. Uma tela por vez: lista de bots OU conversa (como o Telegram). */
+/* celular.css — só vale no app de celular. Uma tela por vez: lista de bots OU conversa (como o Telegram). Mesmo estilo/cores do Chat do PC. */
 html, body { height: 100%; overscroll-behavior: none; }
 #janelaBtns { display: none !important; }
-#barraTitulo { padding-top: env(safe-area-inset-top); height: calc(42px + env(safe-area-inset-top)); }
+#barraTitulo { display: none !important; }            /* a barra com logo e "Online" é do PC; o "Online" vai para dentro do menu ☰ */
 .conv-topo { -webkit-app-region: no-drag; }
 #principal::before { display: none; }
 .conv-topo { padding-right: 14px; padding-top: calc(10px + env(safe-area-inset-top)); }
+#lado .busca { padding-top: calc(10px + env(safe-area-inset-top)); }
 #voltar { display: none; }
+.so-pc { display: none !important; }
+
+/* ---- toque e leitura (Android) ---- */
+.celular * { -webkit-tap-highlight-color: transparent; }                     /* sem o quadrado azul do Android ao tocar */
+.celular #toasts { bottom: calc(86px + env(safe-area-inset-bottom)); }       /* avisos ficam acima da barra de escrever, sem cobrir o campo */
+.celular button.icone { min-width: 44px; min-height: 44px; }                 /* alvo de toque mínimo recomendado */
+.celular :focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; } /* quem usa teclado/TalkBack enxerga o foco */
+.celular .msg { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.celular .msg .acoes { display: none !important; }                          /* no celular as ações aparecem ao SEGURAR a mensagem */
+.celular .msg.selecionada { outline: 2px solid var(--destaque); outline-offset: 1px; }
+.celular .drawer-caixa > .status { padding: 12px 8px calc(4px + env(safe-area-inset-bottom)); font-size: 14px; }
+@media (prefers-reduced-motion: reduce) { .celular .msg.nova, .celular .msg.salto, #folha { animation: none !important; } }
+
+/* ---- barra de baixo (estilo Telegram): [ + | campo ] [ enviar ] ---- */
+.celular .compor { position: relative; align-items: flex-end; gap: 8px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); background: transparent; border-top: 0; }
+.celular #btnAnexo, .celular #btnComandos, .celular #btnRapidas { display: none; }   /* viram itens do menu "+" */
+.celular .pilula { flex: 1; min-width: 0; display: flex; align-items: flex-end; background: var(--painel2); border: 1px solid var(--linha); border-radius: 26px; padding: 2px 6px 2px 2px; }
+.celular .pilula textarea { flex: 1; min-width: 0; min-height: 48px; max-height: 160px; font-size: 16px; line-height: 1.35; padding: 12px 8px; background: transparent; border: 0; border-radius: 0; outline: none; }
+.celular #btnMais { width: 48px; height: 48px; flex: none; background: transparent; border-radius: 50%; color: var(--suave); }
+.celular #btnMais:active, .celular #btnMais[aria-expanded="true"] { background: rgba(255,255,255,.1); color: var(--texto); }
+.celular button.enviar { width: 52px; height: 52px; flex: none; }
+#menuMais { position: absolute; left: 10px; bottom: calc(100% + 4px); z-index: 15; min-width: 240px; padding: 6px; display: flex; flex-direction: column; gap: 2px; background: var(--painel2); border: 1px solid var(--linha); border-radius: 16px; box-shadow: 0 8px 24px #000a; }
+#menuMais button, #folha button { display: flex; align-items: center; justify-content: flex-start; gap: 14px; min-height: 52px; padding: 0 16px; width: 100%; text-align: left; font-size: 16px; background: transparent; border-radius: 12px; }
+#menuMais button:active, #folha button:active { background: rgba(255,255,255,.1); }
+
+/* ---- menu ao segurar a mensagem (folha que sobe de baixo) ---- */
+#folhaFundo { position: fixed; inset: 0; z-index: 60; background: #0009; }
+#folha { position: fixed; left: 0; right: 0; bottom: 0; z-index: 61; display: flex; flex-direction: column; gap: 2px; padding: 10px 12px calc(14px + env(safe-area-inset-bottom)); background: var(--painel2); border-radius: 20px 20px 0 0; box-shadow: 0 -8px 24px #0008; animation: folha-sobe .18s ease-out; }
+#folha .folha-previa { margin: 0; padding: 6px 12px 10px; font-size: 13px; color: var(--suave); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#folha button.perigo { color: var(--erro); }
+@keyframes folha-sobe { from { transform: translateY(40px); opacity: 0; } }
+
+/* post do n8n no celular: imagem em cima (largura toda), legenda e botões embaixo (lado a lado ficava espremido) */
+.celular .msg.post { max-width: 94%; }
+.celular .post-corpo { flex-direction: column; gap: 10px; }
+.celular .post-corpo .foto { width: 100%; max-height: 360px; }
+.celular .post-lado { width: 100%; }
+
 @media (max-width: 860px) {
   #app { grid-template-columns: 1fr; position: relative; }
   #lado, #principal { grid-column: 1; grid-row: 1; height: 100%; }
@@ -15,6 +54,4 @@ html, body { height: 100%; overscroll-behavior: none; }
   #voltar { display: grid; }
   .baixar-todas span { display: none; }              /* só o ícone */
   #painelBot { position: absolute; inset: 0; width: auto; z-index: 20; }
-  .composer, .conv-col { padding-bottom: env(safe-area-inset-bottom); }
 }
-.so-pc { display: none !important; }

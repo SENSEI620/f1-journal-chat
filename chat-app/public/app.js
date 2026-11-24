@@ -97,7 +97,7 @@ function receberBots(r) {
     somDeChegada(bots);
     botsGuardados = bots.filter((b) => !b.pendente); Historico.salvarBots(botsGuardados);
   }
-  if (botAtual) { const novo = bots.find((b) => b.id === botAtual.id); if (novo) { const mudou = novo.ultima_em !== botAtual.ultima_em || novo.nao_lidas !== botAtual.nao_lidas; botAtual = novo; if (mudou && !document.hidden) atualizarConversa(); } }
+  if (botAtual) { const novo = bots.find((b) => b.id === botAtual.id); if (novo) { const mudou = novo.ultima_em !== botAtual.ultima_em || novo.nao_lidas !== botAtual.nao_lidas; botAtual = novo; aplicarSoRecebe(); if (mudou && !document.hidden) atualizarConversa(); } }
   const ass = JSON.stringify(bots.map((b) => [b.id, b.nome, b.nao_lidas, b.ultima_em, b.ultima_texto, b.avatar && b.avatar.length, b.id === (botAtual && botAtual.id), fixados.includes(b.id), silenciados.includes(String(b.id))]));
   if (ass !== assinaturaLista) { assinaturaLista = ass; desenharLista(); } // só redesenha se algo mudou
 }
@@ -614,7 +614,7 @@ function abrirGerenciar() {
   const opSom = el('input', { type: 'checkbox' }); opSom.checked = somLigado(b.id);
   opSom.addEventListener('change', () => { alternarSom(b.id); aviso(opSom.checked ? 'Efeitos sonoros ligados neste bot' : 'Efeitos sonoros desligados neste bot'); });
   const opSoRecebe = el('input', { type: 'checkbox' }); opSoRecebe.checked = soRecebe(b.id);
-  opSoRecebe.addEventListener('change', () => { alternarSoRecebe(b.id); aviso(opSoRecebe.checked ? 'Este bot agora só recebe mensagens' : 'Este bot voltou a poder enviar mensagens'); });
+  opSoRecebe.addEventListener('change', async () => { try { await chamar('bot-editar', { id: b.id, soRecebe: opSoRecebe.checked }); receberBots(await chamar('bots')); aviso(opSoRecebe.checked ? 'Este bot agora só recebe mensagens' : 'Este bot voltou a poder enviar mensagens'); } catch (e) { opSoRecebe.checked = !opSoRecebe.checked; aviso(limparErro(e), 'erro'); } });
   const opPasta = el('input', { type: 'checkbox' }); opPasta.checked = true;
   chamar('config-ler').then((c) => { opPasta.checked = c.abrirPastaAoUsar; }).catch(() => {});
   opPasta.addEventListener('change', async () => { try { await chamar('config-salvar', { abrirPastaAoUsar: opPasta.checked }); aviso(opPasta.checked ? 'Ao clicar em Usar, a pasta vai abrir' : 'Ao clicar em Usar, a pasta NÃO abre (a imagem fica na pasta de saída)'); } catch (e) { aviso(limparErro(e), 'erro'); } });
@@ -981,9 +981,8 @@ $('mnApagar').addEventListener('click', apagarBotAtual);
 let painelAberto = (() => { try { return localStorage.getItem('f1chat.painel') === '1'; } catch (e) { return false; } })();
 const salvarPainel = () => { try { localStorage.setItem('f1chat.painel', painelAberto ? '1' : '0'); } catch (e) {} };
 // Bot "só recebe" (avisos): some o campo de escrever, o clipe e os comandos
-let soRecebeLista = (() => { try { return JSON.parse(localStorage.getItem('f1chat.soRecebe') || '[]'); } catch (e) { return []; } })();
-const soRecebe = (id) => soRecebeLista.includes(id);
-function alternarSoRecebe(id) { soRecebeLista = soRecebe(id) ? soRecebeLista.filter((x) => x !== id) : [...soRecebeLista, id]; try { localStorage.setItem('f1chat.soRecebe', JSON.stringify(soRecebeLista)); } catch (e) {} aplicarSoRecebe(); }
+// "Só recebe" vem do servidor (campo so_recebe do bot): vale igual no PC e no celular
+const soRecebe = (id) => { const b = bots.find((x) => x.id === id); return !!(b && b.so_recebe); };
 function aplicarSoRecebe() { const so = !!(botAtual && soRecebe(botAtual.id)); $('rodapeCompor').hidden = so; if (so) { esconderComandos(); fotoPendente = null; $('previaFoto').hidden = true; } }
 function aplicarPainel() { aplicarSoRecebe(); const p = $('painelBot'); p.hidden = !painelAberto || !botAtual; if (!p.hidden) renderPainel(); }
 function renderPainel() {
